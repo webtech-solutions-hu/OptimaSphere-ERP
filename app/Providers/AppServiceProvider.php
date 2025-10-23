@@ -11,6 +11,9 @@ use App\Policies\CompletedJobPolicy;
 use App\Policies\FailedJobPolicy;
 use App\Policies\JobPolicy;
 use App\Policies\SessionPolicy;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -37,5 +40,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Register activity log event subscriber
         Event::subscribe(LogUserActivity::class);
+
+        // Register footer render hook
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::FOOTER,
+            fn (): string => view('filament.footer')->render(),
+        );
     }
 }

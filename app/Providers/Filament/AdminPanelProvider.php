@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->registration()
             ->passwordReset()
             ->emailVerification()
+            ->brandName('OptimaSphere ERP')
             ->colors([
                 'primary' => Color::Amber,
             ])

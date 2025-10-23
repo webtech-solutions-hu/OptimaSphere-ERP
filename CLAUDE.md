@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Laravel 12 application with Filament admin panel integration. The project uses Tailwind CSS 4 for styling and Vite for asset bundling. Development is managed through Reward Docker environment.
+**OptimaSphere ERP** is a Laravel 12 application with Filament admin panel integration. The project uses Tailwind CSS 4 for styling and Vite for asset bundling. Development is managed through Reward Docker environment.
+
+**Creator**: [Webtech-Solutions](https://webtech-solutions.hu)
 
 ## Development Commands
 
@@ -13,6 +15,29 @@ This is a Laravel 12 application with Filament admin panel integration. The proj
 composer setup
 ```
 This runs the complete setup: installs dependencies, creates .env file, generates app key, runs migrations, installs npm packages, and builds assets.
+
+**Important**: After setup, update your `.env` file with the application name:
+```
+APP_NAME="OptimaSphere ERP"
+```
+
+### Version Management
+
+Version information is managed in `config/app-version.php`:
+
+```php
+'version' => '1.0.0',  // Update when releasing new versions
+'stage' => 'stable',   // Options: 'alpha', 'beta', 'stable'
+```
+
+**Version Stages**:
+- `alpha` - Displays version number with red ALPHA badge in footer (e.g., v1.0.0 ALPHA)
+- `beta` - Displays version number with yellow BETA badge in footer (e.g., v1.0.0 BETA)
+- `stable` - Displays version number only, without stage badge (e.g., v1.0.0)
+
+Update `config/app-version.php` directly when:
+- Releasing a new version (change `version` value)
+- Moving between release stages (change `stage` value)
 
 ### Development Server
 ```bash
