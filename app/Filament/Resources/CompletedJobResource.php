@@ -70,13 +70,13 @@ class CompletedJobResource extends Resource
                     ->tooltip('Time taken to complete the job'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Started')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
                     ->description(fn ($record) => date('Y-m-d H:i:s', $record->created_at)),
                 Tables\Columns\TextColumn::make('completed_at')
                     ->label('Completed')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
                     ->description(fn ($record) => date('Y-m-d H:i:s', $record->completed_at)),
@@ -113,11 +113,11 @@ class CompletedJobResource extends Resource
                                     ->formatStateUsing(fn ($state) => $state ? gmdate('H:i:s', $state) : 'N/A'),
                                 \Filament\Infolists\Components\TextEntry::make('created_at')
                                     ->label('Started At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->since(),
                                 \Filament\Infolists\Components\TextEntry::make('completed_at')
                                     ->label('Completed At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->since(),
                             ])
                             ->columns(2),

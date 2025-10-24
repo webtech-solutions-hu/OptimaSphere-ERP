@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\UserApprovedNotification;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -171,11 +172,11 @@ class UserResource extends Resource
                     ->badge()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -204,8 +205,102 @@ class UserResource extends Resource
                     ->native(false),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->iconButton()
+                    ->tooltip('View')
+                    ->slideOver()
+                    ->infolist([
+                        Infolists\Components\Section::make('User Information')
+                            ->schema([
+                                Infolists\Components\ImageEntry::make('avatar')
+                                    ->label('Avatar')
+                                    ->disk('public')
+                                    ->defaultImageUrl(fn ($record) => 'https://ui-avatars.com/api/?name=' . urlencode($record->name) . '&color=7F9CF5&background=EBF4FF')
+                                    ->circular()
+                                    ->columnSpanFull(),
+                                Infolists\Components\TextEntry::make('name')
+                                    ->weight('bold'),
+                                Infolists\Components\TextEntry::make('email')
+                                    ->icon('heroicon-o-envelope')
+                                    ->copyable(),
+                                Infolists\Components\TextEntry::make('phone')
+                                    ->icon('heroicon-o-phone')
+                                    ->default('N/A'),
+                                Infolists\Components\TextEntry::make('mobile')
+                                    ->icon('heroicon-o-device-phone-mobile')
+                                    ->default('N/A'),
+                                Infolists\Components\TextEntry::make('location')
+                                    ->icon('heroicon-o-map-pin')
+                                    ->default('N/A'),
+                                Infolists\Components\TextEntry::make('bio')
+                                    ->columnSpanFull()
+                                    ->default('N/A'),
+                            ])
+                            ->columns(2),
+
+                        Infolists\Components\Section::make('Status')
+                            ->schema([
+                                Infolists\Components\IconEntry::make('email_verified_at')
+                                    ->label('Email Verified')
+                                    ->boolean()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle')
+                                    ->trueColor('success')
+                                    ->falseColor('danger'),
+                                Infolists\Components\IconEntry::make('is_active')
+                                    ->label('Active')
+                                    ->boolean()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle')
+                                    ->trueColor('success')
+                                    ->falseColor('danger'),
+                                Infolists\Components\IconEntry::make('approved_at')
+                                    ->label('Approved')
+                                    ->boolean()
+                                    ->trueIcon('heroicon-o-check-circle')
+                                    ->falseIcon('heroicon-o-x-circle')
+                                    ->trueColor('success')
+                                    ->falseColor('danger'),
+                                Infolists\Components\TextEntry::make('approvedBy.name')
+                                    ->label('Approved By')
+                                    ->default('N/A'),
+                            ])
+                            ->columns(4),
+
+                        Infolists\Components\Section::make('Roles')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('roles.name')
+                                    ->label('Assigned Roles')
+                                    ->badge()
+                                    ->color('primary')
+                                    ->default('No roles assigned'),
+                            ]),
+
+                        Infolists\Components\Section::make('Timestamps')
+                            ->schema([
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->dateTime(config('datetime.format'))
+                                    ->since(),
+                                Infolists\Components\TextEntry::make('updated_at')
+                                    ->dateTime(config('datetime.format'))
+                                    ->since(),
+                                Infolists\Components\TextEntry::make('email_verified_at')
+                                    ->label('Email Verified At')
+                                    ->dateTime(config('datetime.format'))
+                                    ->default('Not verified'),
+                                Infolists\Components\TextEntry::make('approved_at')
+                                    ->label('Approved At')
+                                    ->dateTime(config('datetime.format'))
+                                    ->default('Not approved'),
+                            ])
+                            ->columns(2)
+                            ->collapsible()
+                            ->collapsed(),
+                    ]),
                 Tables\Actions\Action::make('verify_email')
                     ->icon('heroicon-o-envelope-open')
+                    ->iconButton()
+                    ->tooltip('Verify Email')
                     ->color('info')
                     ->requiresConfirmation()
                     ->modalHeading('Verify Email')
@@ -224,6 +319,8 @@ class UserResource extends Resource
                     }),
                 Tables\Actions\Action::make('approve')
                     ->icon('heroicon-o-check-circle')
+                    ->iconButton()
+                    ->tooltip('Approve User')
                     ->color('success')
                     ->requiresConfirmation()
                     ->modalHeading('Approve User')
@@ -254,6 +351,8 @@ class UserResource extends Resource
                     }),
                 Tables\Actions\Action::make('revoke_approval')
                     ->icon('heroicon-o-x-circle')
+                    ->iconButton()
+                    ->tooltip('Revoke Approval')
                     ->color('warning')
                     ->requiresConfirmation()
                     ->modalHeading('Revoke Approval')
@@ -271,8 +370,12 @@ class UserResource extends Resource
                             ->body("{$record->name}'s approval has been revoked.")
                             ->send();
                     }),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Edit'),
+                Tables\Actions\DeleteAction::make()
+                    ->iconButton()
+                    ->tooltip('Delete'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

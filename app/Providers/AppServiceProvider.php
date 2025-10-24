@@ -11,6 +11,7 @@ use App\Policies\CompletedJobPolicy;
 use App\Policies\FailedJobPolicy;
 use App\Policies\JobPolicy;
 use App\Policies\SessionPolicy;
+use Carbon\Carbon;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
@@ -33,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Set default date format for Carbon
+        Carbon::serializeUsing(function ($carbon) {
+            return $carbon->format('Y-m-d H:i:s');
+        });
+
         Gate::policy(Session::class, SessionPolicy::class);
         Gate::policy(Job::class, JobPolicy::class);
         Gate::policy(CompletedJob::class, CompletedJobPolicy::class);

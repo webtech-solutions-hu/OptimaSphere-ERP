@@ -73,20 +73,20 @@ class JobResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
                     ->description(fn ($record) => date('Y-m-d H:i:s', $record->created_at)),
                 Tables\Columns\TextColumn::make('available_at')
                     ->label('Available')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
                     ->toggleable()
                     ->description(fn ($record) => date('Y-m-d H:i:s', $record->available_at)),
                 Tables\Columns\TextColumn::make('reserved_at')
                     ->label('Reserved')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->placeholder('Not reserved'),
@@ -117,15 +117,15 @@ class JobResource extends Resource
                                     ->badge(),
                                 \Filament\Infolists\Components\TextEntry::make('created_at')
                                     ->label('Created At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->since(),
                                 \Filament\Infolists\Components\TextEntry::make('available_at')
                                     ->label('Available At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->since(),
                                 \Filament\Infolists\Components\TextEntry::make('reserved_at')
                                     ->label('Reserved At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->placeholder('Not reserved'),
                             ])
                             ->columns(2),

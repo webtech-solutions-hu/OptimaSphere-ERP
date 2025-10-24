@@ -79,7 +79,7 @@ class FailedJobResource extends Resource
                     ->color('danger'),
                 Tables\Columns\TextColumn::make('failed_at')
                     ->label('Failed At')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
                     ->description(fn ($record) => $record->failed_at->format('Y-m-d H:i:s')),
@@ -109,7 +109,7 @@ class FailedJobResource extends Resource
                                     ->label('Job Name'),
                                 \Filament\Infolists\Components\TextEntry::make('failed_at')
                                     ->label('Failed At')
-                                    ->dateTime()
+                                    ->dateTime(config('datetime.format'))
                                     ->since(),
                             ])
                             ->columns(2),

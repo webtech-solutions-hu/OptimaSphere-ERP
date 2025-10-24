@@ -82,10 +82,10 @@ class ActivityLogResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Date')
-                    ->dateTime()
+                    ->dateTime(config('datetime.format'))
                     ->sortable()
                     ->since()
-                    ->description(fn ($record) => $record->created_at->format('M d, Y H:i:s')),
+                    ->description(fn ($record) => $record->created_at->format(config('datetime.format'))),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -157,7 +157,7 @@ class ActivityLogResource extends Resource
                                     ->copyable(),
                                 \Filament\Infolists\Components\TextEntry::make('created_at')
                                     ->label('Timestamp')
-                                    ->dateTime(),
+                                    ->dateTime(config('datetime.format')),
                             ])
                             ->columns(2),
 
