@@ -36,7 +36,13 @@ class AdminPanelProvider extends PanelProvider
             ->emailVerification()
             ->brandName('OptimaSphere ERP')
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::rgb('rgb(26, 78, 255)'), // Deep Tech Blue #1A4EFF
+                'info' => Color::rgb('rgb(0, 224, 198)'),    // Aqua Cyan #00E0C6
+                'success' => Color::rgb('rgb(16, 185, 129)'), // Green
+                'warning' => Color::rgb('rgb(249, 115, 22)'), // Orange
+                'danger' => Color::rgb('rgb(239, 68, 68)'),   // Red
+                'gray' => Color::rgb('rgb(43, 47, 54)'),      // Graphite Gray #2B2F36
+
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
