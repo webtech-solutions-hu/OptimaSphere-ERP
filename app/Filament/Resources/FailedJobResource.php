@@ -26,7 +26,7 @@ class FailedJobResource extends Resource
 
     protected static ?string $navigationGroup = 'System Resources';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 40;
 
     public static function canAccess(): bool
     {

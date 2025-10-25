@@ -20,9 +20,9 @@ class SupplierResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
-    protected static ?string $navigationGroup = 'Procurement';
+    protected static ?string $navigationGroup = 'Procurement & Inventory';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'company_name';
 

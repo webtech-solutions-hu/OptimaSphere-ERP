@@ -20,9 +20,9 @@ class ApiTokens extends Page implements HasTable
 
     protected static string $view = 'filament.pages.api-tokens';
 
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'User Management';
 
-    protected static ?int $navigationSort = 99;
+    protected static ?int $navigationSort = 25;
 
     protected static ?string $title = 'API Tokens';
 

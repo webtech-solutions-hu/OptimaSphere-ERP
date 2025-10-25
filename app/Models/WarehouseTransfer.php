@@ -175,13 +175,59 @@ class WarehouseTransfer extends Model
      */
     public function markAsShipped(User $shipper, ?string $carrier = null, ?string $trackingNumber = null): bool
     {
-        $this->status = 'in_transit';
-        $this->shipped_by = $shipper->id;
-        $this->shipped_date = now();
-        $this->carrier = $carrier;
-        $this->tracking_number = $trackingNumber;
+        \DB::beginTransaction();
 
-        return $this->save();
+        try {
+            // Update transfer status
+            $this->status = 'in_transit';
+            $this->shipped_by = $shipper->id;
+            $this->shipped_date = now();
+            $this->carrier = $carrier;
+            $this->tracking_number = $trackingNumber;
+            $this->save();
+
+            // Create stock movement for outbound (from warehouse)
+            $fromStock = ProductWarehouseStock::firstOrCreate(
+                [
+                    'product_id' => $this->product_id,
+                    'warehouse_id' => $this->from_warehouse_id,
+                ],
+                [
+                    'quantity' => 0,
+                    'reserved_quantity' => 0,
+                    'available_quantity' => 0,
+                ]
+            );
+
+            // Get balance before
+            $balanceBefore = $fromStock->quantity;
+
+            // Remove stock from source warehouse
+            $fromStock->removeStock($this->quantity);
+
+            // Create stock movement record
+            StockMovement::create([
+                'warehouse_id' => $this->from_warehouse_id,
+                'product_id' => $this->product_id,
+                'type' => 'transfer_out',
+                'quantity' => -$this->quantity,
+                'unit_cost' => $this->unit_cost,
+                'total_cost' => $this->total_cost,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $fromStock->quantity,
+                'related_document_type' => 'warehouse_transfer',
+                'related_document_id' => $this->id,
+                'created_by' => $shipper->id,
+                'notes' => "Transfer to {$this->toWarehouse->name}",
+                'movement_date' => now(),
+            ]);
+
+            \DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -189,10 +235,56 @@ class WarehouseTransfer extends Model
      */
     public function markAsReceived(User $receiver): bool
     {
-        $this->status = 'received';
-        $this->received_by = $receiver->id;
-        $this->received_date = now();
+        \DB::beginTransaction();
 
-        return $this->save();
+        try {
+            // Update transfer status
+            $this->status = 'received';
+            $this->received_by = $receiver->id;
+            $this->received_date = now();
+            $this->save();
+
+            // Create stock movement for inbound (to warehouse)
+            $toStock = ProductWarehouseStock::firstOrCreate(
+                [
+                    'product_id' => $this->product_id,
+                    'warehouse_id' => $this->to_warehouse_id,
+                ],
+                [
+                    'quantity' => 0,
+                    'reserved_quantity' => 0,
+                    'available_quantity' => 0,
+                ]
+            );
+
+            // Get balance before
+            $balanceBefore = $toStock->quantity;
+
+            // Add stock to destination warehouse
+            $toStock->addStock($this->quantity);
+
+            // Create stock movement record
+            StockMovement::create([
+                'warehouse_id' => $this->to_warehouse_id,
+                'product_id' => $this->product_id,
+                'type' => 'transfer_in',
+                'quantity' => $this->quantity,
+                'unit_cost' => $this->unit_cost,
+                'total_cost' => $this->total_cost,
+                'balance_before' => $balanceBefore,
+                'balance_after' => $toStock->quantity,
+                'related_document_type' => 'warehouse_transfer',
+                'related_document_id' => $this->id,
+                'created_by' => $receiver->id,
+                'notes' => "Transfer from {$this->fromWarehouse->name}",
+                'movement_date' => now(),
+            ]);
+
+            \DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            throw $e;
+        }
     }
 }

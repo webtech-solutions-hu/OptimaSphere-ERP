@@ -18,7 +18,7 @@ class UnitResource extends Resource
 
     protected static ?string $navigationGroup = 'Product Management';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'name';
 

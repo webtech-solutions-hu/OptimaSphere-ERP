@@ -19,7 +19,7 @@ class ActivityLogResource extends Resource
 
     protected static ?string $navigationGroup = 'User Management';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 30;
 
     public static function getNavigationBadge(): ?string
     {

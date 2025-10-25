@@ -3,6 +3,10 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\CustomAccountWidget;
+use App\Filament\Widgets\LowStockProductsWidget;
+use App\Filament\Widgets\RecentActivitiesWidget;
+use App\Filament\Widgets\StatsOverviewWidget;
+use App\Filament\Widgets\WarehouseStockOverviewWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
@@ -17,6 +21,10 @@ class Dashboard extends BaseDashboard
     {
         return [
             CustomAccountWidget::class,
+            StatsOverviewWidget::class,
+            LowStockProductsWidget::class,
+            RecentActivitiesWidget::class,
+            WarehouseStockOverviewWidget::class,
         ];
     }
 }

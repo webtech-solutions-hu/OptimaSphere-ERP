@@ -23,7 +23,7 @@ class CustomerResource extends Resource
 
     protected static ?string $navigationGroup = 'CRM & Sales';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'code';
 

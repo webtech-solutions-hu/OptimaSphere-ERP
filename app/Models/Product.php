@@ -254,6 +254,29 @@ class Product extends Model
     }
 
     /**
+     * Get product batches
+     */
+    public function batches()
+    {
+        return $this->hasMany(ProductBatch::class);
+    }
+
+    /**
+     * Get purchase requisitions
+     */
+    public function purchaseRequisitions()
+    {
+        return $this->hasManyThrough(
+            PurchaseRequisition::class,
+            PurchaseRequisitionItem::class,
+            'product_id',
+            'id',
+            'id',
+            'purchase_requisition_id'
+        );
+    }
+
+    /**
      * Get stock in a specific warehouse
      */
     public function getStockInWarehouse(int $warehouseId): ?ProductWarehouseStock

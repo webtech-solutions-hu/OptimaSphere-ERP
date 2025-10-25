@@ -20,7 +20,7 @@ class WarehouseResource extends Resource
 
     protected static ?string $navigationGroup = 'Procurement & Inventory';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 20;
 
     protected static ?string $recordTitleAttribute = 'name';
 
