@@ -14,6 +14,7 @@ class Customer extends Model
     protected $fillable = [
         'code',
         'type',
+        'category_id',
         'company_name',
         'first_name',
         'last_name',
@@ -110,6 +111,14 @@ class Customer extends Model
     public function priceList(): BelongsTo
     {
         return $this->belongsTo(PriceList::class);
+    }
+
+    /**
+     * Get the category
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**

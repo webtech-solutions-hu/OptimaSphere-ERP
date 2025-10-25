@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
@@ -14,6 +15,7 @@ class Supplier extends Model
     protected $fillable = [
         'code',
         'type',
+        'primary_category_id',
         'company_name',
         'email',
         'phone',
@@ -111,6 +113,22 @@ class Supplier extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Get the primary category
+     */
+    public function primaryCategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'primary_category_id');
+    }
+
+    /**
+     * Get the product categories (many-to-many)
+     */
+    public function productCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'supplier_category');
     }
 
     /**

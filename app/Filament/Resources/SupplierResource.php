@@ -191,13 +191,25 @@ class SupplierResource extends Resource
 
                 Forms\Components\Section::make('Categorization')
                     ->schema([
-                        Forms\Components\TextInput::make('category')
+                        Forms\Components\Select::make('primary_category_id')
                             ->label('Primary Category')
-                            ->maxLength(255),
+                            ->relationship('primaryCategory', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required(),
+                                Forms\Components\TextInput::make('slug')
+                                    ->required(),
+                            ]),
 
-                        Forms\Components\TagsInput::make('product_categories')
+                        Forms\Components\Select::make('productCategories')
                             ->label('Product Categories')
-                            ->placeholder('Add categories')
+                            ->relationship('productCategories', 'name')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->helperText('Select multiple categories that this supplier provides')
                             ->columnSpanFull(),
 
                         Forms\Components\Select::make('assigned_procurement_officer')
@@ -296,7 +308,8 @@ class SupplierResource extends Resource
                     ->copyable()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('category')
+                Tables\Columns\TextColumn::make('primaryCategory.name')
+                    ->label('Primary Category')
                     ->badge()
                     ->color('success')
                     ->toggleable(),
@@ -353,7 +366,11 @@ class SupplierResource extends Resource
                         'service' => 'Service Provider',
                     ]),
 
-                Tables\Filters\SelectFilter::make('category'),
+                Tables\Filters\SelectFilter::make('primary_category_id')
+                    ->label('Primary Category')
+                    ->relationship('primaryCategory', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('assigned_procurement_officer')
                     ->label('Procurement Officer')

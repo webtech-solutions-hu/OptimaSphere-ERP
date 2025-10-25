@@ -36,7 +36,7 @@ class EditProfile extends Page
         $this->profileData = [
             'name' => $user->name,
             'email' => $user->email,
-            'avatar' => $user->avatar,
+            'avatar' => $user->avatar ? [$user->avatar] : null,
             'phone' => $user->phone,
             'mobile' => $user->mobile,
             'location' => $user->location,
@@ -142,7 +142,7 @@ class EditProfile extends Page
         $user->update([
             'name' => $data['name'],
             'email' => $data['email'],
-            'avatar' => $data['avatar'],
+            'avatar' => is_array($data['avatar']) ? ($data['avatar'][0] ?? null) : $data['avatar'],
             'phone' => $data['phone'],
             'mobile' => $data['mobile'],
             'location' => $data['location'],

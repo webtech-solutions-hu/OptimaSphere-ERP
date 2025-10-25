@@ -222,6 +222,62 @@ class Product extends Model
     }
 
     /**
+     * Get warehouse stock for this product
+     */
+    public function warehouseStock()
+    {
+        return $this->hasMany(ProductWarehouseStock::class);
+    }
+
+    /**
+     * Get stock movements for this product
+     */
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /**
+     * Get stock adjustments for this product
+     */
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
+    }
+
+    /**
+     * Get warehouse transfers for this product
+     */
+    public function warehouseTransfers()
+    {
+        return $this->hasMany(WarehouseTransfer::class);
+    }
+
+    /**
+     * Get stock in a specific warehouse
+     */
+    public function getStockInWarehouse(int $warehouseId): ?ProductWarehouseStock
+    {
+        return $this->warehouseStock()->where('warehouse_id', $warehouseId)->first();
+    }
+
+    /**
+     * Get total stock across all warehouses
+     */
+    public function getTotalStockAttribute(): float
+    {
+        return $this->warehouseStock()->sum('quantity');
+    }
+
+    /**
+     * Get available stock across all warehouses
+     */
+    public function getAvailableStockAttribute(): float
+    {
+        return $this->warehouseStock()->sum('available_quantity');
+    }
+
+    /**
      * Get current selling price (considering sale price)
      */
     public function getCurrentPriceAttribute(): float

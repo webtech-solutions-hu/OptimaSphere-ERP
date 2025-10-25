@@ -146,3 +146,4 @@ This project uses Reward for Docker-based local development. The `.reward/` dire
 3. Frontend changes in `resources/` are hot-reloaded when using `npm run dev`
 4. Queue jobs are processed by the queue worker when using `composer dev`
 5. Logs are viewable in real-time via Pail when using `composer dev`
+- Counter must have on all sub-menus.

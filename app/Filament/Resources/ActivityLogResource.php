@@ -171,11 +171,17 @@ class ActivityLogResource extends Resource
 
                         \Filament\Infolists\Components\Section::make('Additional Properties')
                             ->schema([
-                                \Filament\Infolists\Components\TextEntry::make('properties')
+                                \Filament\Infolists\Components\TextEntry::make('formatted_properties')
                                     ->label('Details')
                                     ->columnSpanFull()
-                                    ->formatStateUsing(fn ($state) => $state ? json_encode($state, JSON_PRETTY_PRINT) : 'No additional data')
-                                    ->copyable(),
+                                    ->html()
+                                    ->state(function ($record) {
+                                        if (empty($record->properties)) {
+                                            return '<span class="text-gray-500">No additional data</span>';
+                                        }
+                                        $json = json_encode($record->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                                        return '<pre class="text-xs overflow-auto p-2 bg-gray-50 rounded">' . htmlspecialchars($json) . '</pre>';
+                                    }),
                             ])
                             ->collapsible()
                             ->collapsed()

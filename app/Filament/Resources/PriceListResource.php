@@ -20,6 +20,11 @@ class PriceListResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::where('is_active', true)->count();
+    }
+
     public static function form(Form $form): Form
     {
         return $form

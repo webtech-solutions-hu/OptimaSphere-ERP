@@ -25,7 +25,17 @@ class CustomerResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'display_name';
+    protected static ?string $recordTitleAttribute = 'code';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['code', 'company_name', 'first_name', 'last_name', 'email', 'phone', 'mobile'];
+    }
+
+    public static function getGlobalSearchResultTitle(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return $record->display_name;
+    }
 
     public static function getNavigationBadge(): ?string
     {
@@ -199,8 +209,17 @@ class CustomerResource extends Resource
                         Forms\Components\TextInput::make('region')
                             ->maxLength(255),
 
-                        Forms\Components\TextInput::make('category')
-                            ->maxLength(255),
+                        Forms\Components\Select::make('category_id')
+                            ->label('Category')
+                            ->relationship('category', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->createOptionForm([
+                                Forms\Components\TextInput::make('name')
+                                    ->required(),
+                                Forms\Components\TextInput::make('slug')
+                                    ->required(),
+                            ]),
 
                         Forms\Components\TextInput::make('account_group')
                             ->maxLength(255),
@@ -274,7 +293,8 @@ class CustomerResource extends Resource
                     ->badge()
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('category')
+                Tables\Columns\TextColumn::make('category.name')
+                    ->label('Category')
                     ->badge()
                     ->color('success')
                     ->toggleable(),
@@ -312,7 +332,11 @@ class CustomerResource extends Resource
 
                 Tables\Filters\SelectFilter::make('region'),
 
-                Tables\Filters\SelectFilter::make('category'),
+                Tables\Filters\SelectFilter::make('category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload(),
 
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Status')
@@ -385,7 +409,8 @@ class CustomerResource extends Resource
                                     ->label('Sales Representative'),
                                 Infolists\Components\TextEntry::make('region')
                                     ->badge(),
-                                Infolists\Components\TextEntry::make('category')
+                                Infolists\Components\TextEntry::make('category.name')
+                                    ->label('Category')
                                     ->badge(),
                                 Infolists\Components\TextEntry::make('account_group')
                                     ->badge(),

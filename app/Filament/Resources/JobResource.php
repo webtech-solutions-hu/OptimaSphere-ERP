@@ -3,12 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\JobResource\Pages;
+use App\Models\CompletedJob;
 use App\Models\Job;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class JobResource extends Resource
 {
@@ -102,53 +106,189 @@ class JobResource extends Resource
                     ->toggle(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()
-                    ->slideOver()
-                    ->infolist([
-                        \Filament\Infolists\Components\Section::make('Job Information')
-                            ->schema([
-                                \Filament\Infolists\Components\TextEntry::make('id')
-                                    ->label('Job ID'),
-                                \Filament\Infolists\Components\TextEntry::make('queue')
-                                    ->badge(),
-                                \Filament\Infolists\Components\TextEntry::make('job_name')
-                                    ->label('Job Name'),
-                                \Filament\Infolists\Components\TextEntry::make('attempts')
-                                    ->badge(),
-                                \Filament\Infolists\Components\TextEntry::make('created_at')
-                                    ->label('Created At')
-                                    ->dateTime(config('datetime.format'))
-                                    ->since(),
-                                \Filament\Infolists\Components\TextEntry::make('available_at')
-                                    ->label('Available At')
-                                    ->dateTime(config('datetime.format'))
-                                    ->since(),
-                                \Filament\Infolists\Components\TextEntry::make('reserved_at')
-                                    ->label('Reserved At')
-                                    ->dateTime(config('datetime.format'))
-                                    ->placeholder('Not reserved'),
-                            ])
-                            ->columns(2),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('run_now')
+                        ->label('Run Now')
+                        ->icon('heroicon-o-play')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Run Job Now')
+                        ->modalDescription('Are you sure you want to execute this job immediately? This will process the job outside the normal queue.')
+                        ->action(function ($record) {
+                            try {
+                                // Store job data before execution
+                                $jobData = [
+                                    'queue' => $record->queue,
+                                    'payload' => $record->payload,
+                                    'created_at' => $record->created_at,
+                                ];
 
-                        \Filament\Infolists\Components\Section::make('Job Payload')
-                            ->schema([
-                                \Filament\Infolists\Components\TextEntry::make('payload')
-                                    ->label('Full Payload')
-                                    ->columnSpanFull()
-                                    ->formatStateUsing(fn ($state) => json_encode(json_decode($state), JSON_PRETTY_PRINT))
-                                    ->copyable(),
-                            ])
-                            ->collapsible()
-                            ->collapsed(),
-                    ]),
-                Tables\Actions\DeleteAction::make()
-                    ->label('Remove')
-                    ->modalHeading('Remove Job')
-                    ->modalDescription('Are you sure you want to remove this job from the queue?')
-                    ->successNotificationTitle('Job removed'),
+                                $startTime = time();
+
+                                // Run the queue worker for just this job
+                                $exitCode = Artisan::call('queue:work', [
+                                    '--once' => true,
+                                    '--queue' => $record->queue,
+                                ]);
+
+                                // Check if job was processed successfully (removed from queue)
+                                $jobStillExists = Job::find($record->id);
+
+                                if (!$jobStillExists) {
+                                    // Job completed successfully, move to completed_jobs
+                                    CompletedJob::create([
+                                        'queue' => $jobData['queue'],
+                                        'payload' => $jobData['payload'],
+                                        'created_at' => $jobData['created_at'],
+                                        'completed_at' => time(),
+                                    ]);
+
+                                    Notification::make()
+                                        ->title('Job Executed Successfully')
+                                        ->success()
+                                        ->body('The job has been processed and moved to completed jobs.')
+                                        ->send();
+                                } else {
+                                    // Job still exists, might have failed or been reserved by another process
+                                    Notification::make()
+                                        ->title('Job Processing Issue')
+                                        ->warning()
+                                        ->body('The job may have failed or is being processed. Check failed jobs if needed.')
+                                        ->send();
+                                }
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Job Execution Failed')
+                                    ->danger()
+                                    ->body('Error: ' . $e->getMessage())
+                                    ->send();
+                            }
+                        })
+                        ->visible(fn ($record) => $record->reserved_at === null),
+
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver()
+                        ->infolist([
+                            \Filament\Infolists\Components\Section::make('Job Information')
+                                ->schema([
+                                    \Filament\Infolists\Components\TextEntry::make('id')
+                                        ->label('Job ID'),
+                                    \Filament\Infolists\Components\TextEntry::make('queue')
+                                        ->badge(),
+                                    \Filament\Infolists\Components\TextEntry::make('job_name')
+                                        ->label('Job Name'),
+                                    \Filament\Infolists\Components\TextEntry::make('attempts')
+                                        ->badge(),
+                                    \Filament\Infolists\Components\TextEntry::make('created_at')
+                                        ->label('Created At')
+                                        ->dateTime(config('datetime.format'))
+                                        ->since(),
+                                    \Filament\Infolists\Components\TextEntry::make('available_at')
+                                        ->label('Available At')
+                                        ->dateTime(config('datetime.format'))
+                                        ->since(),
+                                    \Filament\Infolists\Components\TextEntry::make('reserved_at')
+                                        ->label('Reserved At')
+                                        ->dateTime(config('datetime.format'))
+                                        ->placeholder('Not reserved'),
+                                ])
+                                ->columns(2),
+
+                            \Filament\Infolists\Components\Section::make('Job Payload')
+                                ->schema([
+                                    \Filament\Infolists\Components\TextEntry::make('payload')
+                                        ->label('Full Payload')
+                                        ->columnSpanFull()
+                                        ->formatStateUsing(fn ($state) => json_encode(json_decode($state), JSON_PRETTY_PRINT))
+                                        ->copyable(),
+                                ])
+                                ->collapsible()
+                                ->collapsed(),
+                        ]),
+
+                    Tables\Actions\DeleteAction::make()
+                        ->label('Remove')
+                        ->modalHeading('Remove Job')
+                        ->modalDescription('Are you sure you want to remove this job from the queue?')
+                        ->successNotificationTitle('Job removed'),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('run_now_bulk')
+                        ->label('Run Selected Jobs')
+                        ->icon('heroicon-o-play')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Run Selected Jobs')
+                        ->modalDescription('Are you sure you want to execute all selected jobs immediately?')
+                        ->action(function ($records) {
+                            $processed = 0;
+                            $failed = 0;
+                            $completed = 0;
+
+                            foreach ($records as $record) {
+                                if ($record->reserved_at !== null) {
+                                    continue; // Skip reserved jobs
+                                }
+
+                                try {
+                                    // Store job data before execution
+                                    $jobData = [
+                                        'queue' => $record->queue,
+                                        'payload' => $record->payload,
+                                        'created_at' => $record->created_at,
+                                    ];
+
+                                    // Run the queue worker
+                                    Artisan::call('queue:work', [
+                                        '--once' => true,
+                                        '--queue' => $record->queue,
+                                    ]);
+
+                                    // Check if job was processed successfully
+                                    $jobStillExists = Job::find($record->id);
+
+                                    if (!$jobStillExists) {
+                                        // Job completed successfully, move to completed_jobs
+                                        CompletedJob::create([
+                                            'queue' => $jobData['queue'],
+                                            'payload' => $jobData['payload'],
+                                            'created_at' => $jobData['created_at'],
+                                            'completed_at' => time(),
+                                        ]);
+                                        $completed++;
+                                    }
+
+                                    $processed++;
+                                } catch (\Exception $e) {
+                                    $failed++;
+                                }
+                            }
+
+                            if ($processed > 0) {
+                                $message = "{$processed} job(s) processed.";
+                                if ($completed > 0) {
+                                    $message .= " {$completed} moved to completed jobs.";
+                                }
+                                if ($failed > 0) {
+                                    $message .= " {$failed} job(s) failed.";
+                                }
+
+                                Notification::make()
+                                    ->title('Jobs Executed')
+                                    ->success()
+                                    ->body($message)
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('No Jobs Executed')
+                                    ->warning()
+                                    ->body('No jobs were available to execute.')
+                                    ->send();
+                            }
+                        }),
+
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Remove Selected')
                         ->modalHeading('Remove Jobs')
