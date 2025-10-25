@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id();
-            $table->string('code')->unique()->comment('Supplier reference code');
+            $table->string('code')->unique()->nullable()->comment('Supplier reference code - auto-generated');
 
             // Type Classification
             $table->enum('type', ['manufacturer', 'distributor', 'service'])->default('manufacturer');
