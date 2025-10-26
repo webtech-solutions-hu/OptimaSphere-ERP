@@ -24,8 +24,14 @@ class CreateWarehouseTransfer extends CreateRecord
         ActivityLog::log(
             'warehouse_transfer_created',
             "Warehouse transfer {$this->record->reference} was created",
-            $this->record,
-            Auth::user()
+            Auth::user(),
+            [
+                'reference' => $this->record->reference,
+                'from_warehouse_id' => $this->record->from_warehouse_id,
+                'to_warehouse_id' => $this->record->to_warehouse_id,
+                'product_id' => $this->record->product_id,
+                'quantity' => $this->record->quantity,
+            ]
         );
     }
 }

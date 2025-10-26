@@ -78,6 +78,17 @@ class StockAdjustmentResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                if (!$state) {
+                                    return;
+                                }
+
+                                $product = Product::find($state);
+                                if ($product && $product->cost_price) {
+                                    $set('unit_cost', $product->cost_price);
+                                }
+                            })
                             ->columnSpan(1),
 
                         Forms\Components\Select::make('type')
@@ -114,6 +125,12 @@ class StockAdjustmentResource extends Resource
                             ->numeric()
                             ->step(0.01)
                             ->minValue(0.01)
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get, $state) {
+                                $quantity = floatval($state ?? 0);
+                                $unitCost = floatval($get('unit_cost') ?? 0);
+                                $set('total_cost', $quantity * $unitCost);
+                            })
                             ->suffix(fn (Forms\Get $get) => $get('product_id') ? Product::find($get('product_id'))?->unit?->symbol : '')
                             ->helperText('Enter quantity (always positive, type determines if it\'s added or removed)'),
 
@@ -122,6 +139,12 @@ class StockAdjustmentResource extends Resource
                             ->numeric()
                             ->step(0.01)
                             ->prefix('$')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get, $state) {
+                                $quantity = floatval($get('quantity') ?? 0);
+                                $unitCost = floatval($state ?? 0);
+                                $set('total_cost', $quantity * $unitCost);
+                            })
                             ->nullable(),
 
                         Forms\Components\TextInput::make('total_cost')
@@ -130,7 +153,8 @@ class StockAdjustmentResource extends Resource
                             ->step(0.01)
                             ->prefix('$')
                             ->disabled()
-                            ->dehydrated(false),
+                            ->dehydrated()
+                            ->helperText('Automatically calculated: Quantity × Unit Cost'),
                     ])
                     ->columns(3),
 

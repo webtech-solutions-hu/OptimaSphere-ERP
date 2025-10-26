@@ -143,6 +143,17 @@ class Product extends Model
                 $product->slug = Str::slug($product->name);
             }
         });
+
+        static::saved(function ($product) {
+            // Recalculate stock from warehouses after saving
+            if ($product->track_inventory && !$product->wasRecentlyCreated) {
+                $totalStock = $product->warehouseStock()->sum('quantity');
+                if ($product->current_stock != $totalStock) {
+                    $product->current_stock = $totalStock;
+                    $product->saveQuietly(); // Use saveQuietly to avoid infinite loop
+                }
+            }
+        });
     }
 
     /**
@@ -472,5 +483,51 @@ class Product extends Model
     public function scopeWithTag($query, string $tag)
     {
         return $query->whereJsonContains('tags', $tag);
+    }
+
+    /**
+     * Recalculate total stock from all warehouses
+     */
+    public function recalculateStock(): void
+    {
+        $totalStock = $this->warehouseStock()->sum('quantity');
+        $this->current_stock = $totalStock;
+        $this->saveQuietly();
+    }
+
+    /**
+     * Get total available stock across all warehouses
+     */
+    public function getTotalAvailableStockAttribute(): float
+    {
+        return $this->warehouseStock()->sum('available_quantity');
+    }
+
+    /**
+     * Get total reserved stock across all warehouses
+     */
+    public function getTotalReservedStockAttribute(): float
+    {
+        return $this->warehouseStock()->sum('reserved_quantity');
+    }
+
+    /**
+     * Check if product has sufficient stock in any warehouse
+     */
+    public function hasStock(float $quantity = 1): bool
+    {
+        return $this->current_stock >= $quantity;
+    }
+
+    /**
+     * Check if product has sufficient stock in a specific warehouse
+     */
+    public function hasStockInWarehouse(int $warehouseId, float $quantity = 1): bool
+    {
+        $stock = $this->warehouseStock()
+            ->where('warehouse_id', $warehouseId)
+            ->first();
+
+        return $stock && $stock->available_quantity >= $quantity;
     }
 }

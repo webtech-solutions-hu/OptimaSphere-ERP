@@ -6,7 +6,9 @@ use App\Listeners\LogUserActivity;
 use App\Models\CompletedJob;
 use App\Models\FailedJob;
 use App\Models\Job;
+use App\Models\ProductWarehouseStock;
 use App\Models\Session;
+use App\Observers\ProductWarehouseStockObserver;
 use App\Policies\CompletedJobPolicy;
 use App\Policies\FailedJobPolicy;
 use App\Policies\JobPolicy;
@@ -46,6 +48,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register activity log event subscriber
         Event::subscribe(LogUserActivity::class);
+
+        // Register observers
+        ProductWarehouseStock::observe(ProductWarehouseStockObserver::class);
 
         // Register footer render hook
         FilamentView::registerRenderHook(

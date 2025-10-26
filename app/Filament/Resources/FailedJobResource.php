@@ -93,6 +93,8 @@ class FailedJobResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make()
                     ->slideOver()
+                    ->iconButton()
+                    ->tooltip('View')
                     ->infolist([
                         \Filament\Infolists\Components\Section::make('Job Information')
                             ->schema([

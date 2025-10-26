@@ -3,6 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\WarehouseTransferResource\Pages;
+use App\Models\Product;
+use App\Models\ProductWarehouseStock;
 use App\Models\WarehouseTransfer;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -70,6 +72,8 @@ class WarehouseTransferResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required()
+                            ->live()
+                            ->afterStateUpdated(fn (Forms\Set $set) => $set('product_id', null))
                             ->distinct(fn (Forms\Get $get) => $get('to_warehouse_id')),
 
                         Forms\Components\Select::make('to_warehouse_id')
@@ -86,23 +90,104 @@ class WarehouseTransferResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('product_id')
                             ->label('Product')
-                            ->relationship('product', 'name')
+                            ->relationship(
+                                name: 'product',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn ($query, Forms\Get $get) => $query
+                                    ->when(
+                                        $get('from_warehouse_id'),
+                                        fn ($q, $warehouseId) => $q->whereHas(
+                                            'warehouseStock',
+                                            fn ($stockQuery) => $stockQuery
+                                                ->where('warehouse_id', $warehouseId)
+                                                ->where('quantity', '>', 0)
+                                        )
+                                    )
+                            )
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, Forms\Get $get, $state) {
+                                if (!$state || !$get('from_warehouse_id')) {
+                                    return;
+                                }
+
+                                // Get product details
+                                $product = Product::find($state);
+                                if (!$product) {
+                                    return;
+                                }
+
+                                // Get stock in the selected warehouse
+                                $stock = ProductWarehouseStock::where('product_id', $state)
+                                    ->where('warehouse_id', $get('from_warehouse_id'))
+                                    ->first();
+
+                                // Set unit cost from product
+                                if ($product->cost_price) {
+                                    $set('unit_cost', $product->cost_price);
+                                }
+
+                                // Set max available quantity if stock exists
+                                if ($stock && $stock->available_quantity > 0) {
+                                    $set('quantity', $stock->available_quantity);
+                                }
+                            })
+                            ->helperText(fn (Forms\Get $get) =>
+                                $get('from_warehouse_id')
+                                    ? 'Only products available in the selected warehouse are shown'
+                                    : 'Please select a warehouse first'
+                            ),
 
                         Forms\Components\TextInput::make('quantity')
                             ->required()
                             ->numeric()
                             ->step(0.01)
-                            ->minValue(0.01),
+                            ->minValue(0.01)
+                            ->maxValue(function (Forms\Get $get) {
+                                if (!$get('product_id') || !$get('from_warehouse_id')) {
+                                    return null;
+                                }
+
+                                $stock = ProductWarehouseStock::where('product_id', $get('product_id'))
+                                    ->where('warehouse_id', $get('from_warehouse_id'))
+                                    ->first();
+
+                                return $stock ? $stock->available_quantity : null;
+                            })
+                            ->suffix(function (Forms\Get $get) {
+                                if (!$get('product_id')) {
+                                    return '';
+                                }
+
+                                $product = Product::find($get('product_id'));
+                                return $product?->unit?->symbol ?? '';
+                            })
+                            ->helperText(function (Forms\Get $get) {
+                                if (!$get('product_id') || !$get('from_warehouse_id')) {
+                                    return null;
+                                }
+
+                                $stock = ProductWarehouseStock::where('product_id', $get('product_id'))
+                                    ->where('warehouse_id', $get('from_warehouse_id'))
+                                    ->first();
+
+                                if (!$stock) {
+                                    return 'No stock available';
+                                }
+
+                                return "Available: {$stock->available_quantity} (Reserved: {$stock->reserved_quantity})";
+                            }),
 
                         Forms\Components\TextInput::make('unit_cost')
+                            ->label('Unit Cost')
                             ->numeric()
                             ->step(0.01)
-                            ->prefix('$'),
+                            ->prefix('$')
+                            ->helperText('Cost price per unit'),
 
-                        Forms\Components\Date::make('expected_delivery_date')
+                        Forms\Components\DatePicker::make('expected_delivery_date')
                             ->label('Expected Delivery')
                             ->minDate(today()),
                     ])
@@ -200,7 +285,8 @@ class WarehouseTransferResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\ViewAction::make()
+                        ->slideOver(),
                     Tables\Actions\EditAction::make()
                         ->visible(fn ($record) => in_array($record->status, ['draft', 'rejected'])),
 

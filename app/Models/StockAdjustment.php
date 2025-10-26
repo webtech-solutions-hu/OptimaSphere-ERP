@@ -138,11 +138,58 @@ class StockAdjustment extends Model
      */
     public function approve(User $approver): bool
     {
-        $this->status = 'approved';
-        $this->approved_by = $approver->id;
-        $this->approved_at = now();
+        \DB::beginTransaction();
 
-        return $this->save();
+        try {
+            // Update adjustment status
+            $this->status = 'approved';
+            $this->approved_by = $approver->id;
+            $this->approved_at = now();
+            $this->save();
+
+            // Update warehouse stock
+            $stock = ProductWarehouseStock::firstOrCreate(
+                [
+                    'product_id' => $this->product_id,
+                    'warehouse_id' => $this->warehouse_id,
+                ],
+                [
+                    'quantity' => 0,
+                    'reserved_quantity' => 0,
+                    'available_quantity' => 0,
+                ]
+            );
+
+            // Apply the adjustment
+            if ($this->type === 'increase') {
+                $stock->addStock($this->quantity);
+            } else {
+                $stock->removeStock($this->quantity);
+            }
+
+            // Create stock movement record
+            StockMovement::create([
+                'warehouse_id' => $this->warehouse_id,
+                'product_id' => $this->product_id,
+                'type' => 'adjustment',
+                'quantity' => $this->type === 'increase' ? $this->quantity : -$this->quantity,
+                'unit_cost' => $this->unit_cost,
+                'total_cost' => $this->total_cost,
+                'balance_before' => $this->balance_before,
+                'balance_after' => $this->balance_after,
+                'related_document_type' => 'stock_adjustment',
+                'related_document_id' => $this->id,
+                'created_by' => $approver->id,
+                'notes' => "Stock adjustment ({$this->type}) - Reason: {$this->reason}",
+                'movement_date' => $this->adjustment_date,
+            ]);
+
+            \DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            throw $e;
+        }
     }
 
     /**

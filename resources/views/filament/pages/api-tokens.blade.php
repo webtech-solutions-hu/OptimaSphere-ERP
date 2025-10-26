@@ -44,10 +44,10 @@
             <h3>Using Your API Tokens</h3>
             <p>Include your API token in the Authorization header of your HTTP requests:</p>
 
-            <pre class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto"><code>Authorization: Bearer YOUR_API_TOKEN</code></pre>
+            <pre class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto"><code class="text-black dark:text-gray-100">Authorization: Bearer YOUR_API_TOKEN</code></pre>
 
             <h3>Example Request</h3>
-            <pre class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto"><code>curl {{ url('/api/v1/products') }} \
+            <pre class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-auto"><code class="text-black dark:text-gray-100">curl {{ url('/api/v1/products') }} \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Accept: application/json"</code></pre>
 

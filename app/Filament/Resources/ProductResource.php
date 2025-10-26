@@ -244,12 +244,15 @@ class ProductResource extends Resource
                                             ->inline(false)
                                             ->live(),
 
-                                        Forms\Components\TextInput::make('current_stock')
+                                        Forms\Components\Placeholder::make('current_stock')
                                             ->label('Current Stock')
-                                            ->numeric()
-                                            ->default(0)
-                                            ->required()
-                                            ->visible(fn (Forms\Get $get) => $get('track_inventory')),
+                                            ->content(fn ($record) => $record
+                                                ? ($record->track_inventory
+                                                    ? number_format($record->current_stock, 2) . ' ' . ($record->unit?->symbol ?? '')
+                                                    : 'Not tracked')
+                                                : '0')
+                                            ->helperText('Stock is automatically calculated from warehouse levels. Use Stock Adjustments to modify.')
+                                            ->visible(fn (Forms\Get $get, $record) => $record && $get('track_inventory')),
 
                                         Forms\Components\TextInput::make('reorder_level')
                                             ->label('Reorder Level')
