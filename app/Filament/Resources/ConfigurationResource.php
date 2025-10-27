@@ -66,6 +66,7 @@ class ConfigurationResource extends Resource
                         Forms\Components\Select::make('group')
                             ->options([
                                 'general' => 'General',
+                                'company' => 'Company',
                                 'system' => 'System',
                                 'appearance' => 'Appearance',
                                 'email' => 'Email',
@@ -87,19 +88,39 @@ class ConfigurationResource extends Resource
                             ->label('Value')
                             ->visible(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
                             ->required(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
+                            ->dehydrated(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && !in_array($record->type, ['string', 'number'])) {
+                                    $component->state(null);
+                                }
+                            })
                             ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('value')
                             ->label('Value')
                             ->visible(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
                             ->required(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
+                            ->dehydrated(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && !in_array($record->type, ['text', 'json'])) {
+                                    $component->state(null);
+                                }
+                            })
                             ->rows(5)
                             ->columnSpanFull(),
 
                         Forms\Components\Toggle::make('value')
                             ->label('Value')
                             ->visible(fn (Forms\Get $get) => $get('type') === 'boolean')
-                            ->required(fn (Forms\Get $get) => $get('type') === 'boolean')
+                            ->dehydrated(fn (Forms\Get $get) => $get('type') === 'boolean')
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                if ($record && $record->type !== 'boolean') {
+                                    $component->state(null);
+                                } else {
+                                    // Properly convert stored value to boolean
+                                    $component->state($state === '1' || $state === 'true' || $state === true || $state === 1);
+                                }
+                            })
                             ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('description')
@@ -183,6 +204,7 @@ class ConfigurationResource extends Resource
                 Tables\Filters\SelectFilter::make('group')
                     ->options([
                         'general' => 'General',
+                        'company' => 'Company',
                         'system' => 'System',
                         'appearance' => 'Appearance',
                         'email' => 'Email',
