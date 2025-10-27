@@ -81,13 +81,18 @@ class SystemNotification extends Model
         $users = $this->getTargetUsers();
 
         foreach ($users as $user) {
-            \Filament\Notifications\Notification::make()
+            $notification = \Filament\Notifications\Notification::make()
                 ->title($this->title)
                 ->body($this->body)
                 ->icon($this->icon ?? 'heroicon-o-bell')
-                ->color($this->color ?? 'primary')
-                ->{$this->type}()
-                ->sendToDatabase($user);
+                ->color($this->color ?? 'primary');
+
+            // Apply type method if it's a valid method
+            if (in_array($this->type, ['info', 'success', 'warning', 'danger'])) {
+                $notification = $notification->{$this->type}();
+            }
+
+            $notification->sendToDatabase($user);
         }
 
         $this->update([

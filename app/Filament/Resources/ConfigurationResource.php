@@ -84,16 +84,24 @@ class ConfigurationResource extends Resource
 
                 Forms\Components\Section::make('Value')
                     ->schema([
+                        Forms\Components\Toggle::make('value')
+                            ->label('Value')
+                            ->visible(fn (Forms\Get $get) => $get('type') === 'boolean')
+                            ->dehydrated(fn (Forms\Get $get) => $get('type') === 'boolean')
+                            ->afterStateHydrated(function ($component, $state, $record) {
+                                // Only process if this is a boolean type
+                                if ($record && $record->type === 'boolean') {
+                                    // Convert string to boolean
+                                    $component->state($state === '1' || $state === 'true' || $state === true || $state === 1);
+                                }
+                            })
+                            ->columnSpanFull(),
+
                         Forms\Components\TextInput::make('value')
                             ->label('Value')
                             ->visible(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
                             ->required(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
                             ->dehydrated(fn (Forms\Get $get) => in_array($get('type'), ['string', 'number']))
-                            ->afterStateHydrated(function ($component, $state, $record) {
-                                if ($record && !in_array($record->type, ['string', 'number'])) {
-                                    $component->state(null);
-                                }
-                            })
                             ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('value')
@@ -101,26 +109,7 @@ class ConfigurationResource extends Resource
                             ->visible(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
                             ->required(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
                             ->dehydrated(fn (Forms\Get $get) => in_array($get('type'), ['text', 'json']))
-                            ->afterStateHydrated(function ($component, $state, $record) {
-                                if ($record && !in_array($record->type, ['text', 'json'])) {
-                                    $component->state(null);
-                                }
-                            })
                             ->rows(5)
-                            ->columnSpanFull(),
-
-                        Forms\Components\Toggle::make('value')
-                            ->label('Value')
-                            ->visible(fn (Forms\Get $get) => $get('type') === 'boolean')
-                            ->dehydrated(fn (Forms\Get $get) => $get('type') === 'boolean')
-                            ->afterStateHydrated(function ($component, $state, $record) {
-                                if ($record && $record->type !== 'boolean') {
-                                    $component->state(null);
-                                } else {
-                                    // Properly convert stored value to boolean
-                                    $component->state($state === '1' || $state === 'true' || $state === true || $state === 1);
-                                }
-                            })
                             ->columnSpanFull(),
 
                         Forms\Components\Textarea::make('description')

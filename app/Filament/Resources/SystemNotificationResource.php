@@ -268,7 +268,79 @@ class SystemNotificationResource extends Resource
                 Tables\Actions\ViewAction::make()
                     ->iconButton()
                     ->tooltip('View')
-                    ->slideOver(),
+                    ->slideOver()
+                    ->modalWidth('2xl')
+                    ->infolist([
+                        \Filament\Infolists\Components\Section::make('Notification Details')
+                            ->schema([
+                                \Filament\Infolists\Components\TextEntry::make('title')
+                                    ->size('lg')
+                                    ->weight('bold'),
+                                \Filament\Infolists\Components\TextEntry::make('type')
+                                    ->badge()
+                                    ->color(fn ($state) => match ($state) {
+                                        'info' => 'primary',
+                                        'success' => 'success',
+                                        'warning' => 'warning',
+                                        'danger' => 'danger',
+                                        default => 'gray',
+                                    }),
+                                \Filament\Infolists\Components\TextEntry::make('status')
+                                    ->badge()
+                                    ->color(fn ($state) => match ($state) {
+                                        'draft' => 'gray',
+                                        'pending' => 'warning',
+                                        'scheduled' => 'info',
+                                        'sent' => 'success',
+                                        default => 'gray',
+                                    }),
+                                \Filament\Infolists\Components\TextEntry::make('body')
+                                    ->columnSpanFull()
+                                    ->prose(),
+                            ])
+                            ->columns(3),
+
+                        \Filament\Infolists\Components\Section::make('Target Audience')
+                            ->schema([
+                                \Filament\Infolists\Components\TextEntry::make('target_type')
+                                    ->label('Send To')
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state, $record) => match ($state) {
+                                        'global' => 'All Users',
+                                        'role' => 'Role: ' . ($record->targetRole?->name ?? 'N/A'),
+                                        'user' => 'User: ' . ($record->targetUser?->name ?? 'N/A'),
+                                        default => $state,
+                                    })
+                                    ->color(fn ($state) => match ($state) {
+                                        'global' => 'success',
+                                        'role' => 'warning',
+                                        'user' => 'info',
+                                        default => 'gray',
+                                    }),
+                            ])
+                            ->columns(1),
+
+                        \Filament\Infolists\Components\Section::make('Schedule & Status')
+                            ->schema([
+                                \Filament\Infolists\Components\TextEntry::make('scheduled_at')
+                                    ->dateTime()
+                                    ->placeholder('-')
+                                    ->icon('heroicon-o-clock'),
+                                \Filament\Infolists\Components\TextEntry::make('sent_at')
+                                    ->dateTime()
+                                    ->placeholder('-')
+                                    ->since()
+                                    ->icon('heroicon-o-paper-airplane'),
+                                \Filament\Infolists\Components\TextEntry::make('createdBy.name')
+                                    ->label('Created By')
+                                    ->icon('heroicon-o-user'),
+                                \Filament\Infolists\Components\TextEntry::make('created_at')
+                                    ->dateTime()
+                                    ->since()
+                                    ->icon('heroicon-o-calendar'),
+                            ])
+                            ->columns(4),
+                    ]),
 
                 Tables\Actions\DeleteAction::make()
                     ->iconButton()
@@ -290,7 +362,7 @@ class SystemNotificationResource extends Resource
             'index' => Pages\ListSystemNotifications::route('/'),
             'create' => Pages\CreateSystemNotification::route('/create'),
             'edit' => Pages\EditSystemNotification::route('/{record}/edit'),
-            'view' => Pages\ViewSystemNotification::route('/{record}'),
+            // Removed view page to enable slide-over modal
         ];
     }
 }

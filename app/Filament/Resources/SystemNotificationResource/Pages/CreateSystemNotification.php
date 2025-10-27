@@ -27,6 +27,17 @@ class CreateSystemNotification extends CreateRecord
         // Send notification if status is pending
         if ($this->record->status === 'pending') {
             $this->record->send();
+
+            \Filament\Notifications\Notification::make()
+                ->title('Notification Sent')
+                ->body('The notification has been sent successfully to target users.')
+                ->success()
+                ->send();
         }
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }
