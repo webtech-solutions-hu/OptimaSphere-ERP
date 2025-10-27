@@ -64,7 +64,10 @@ class SessionResource extends Resource
                 Tables\Columns\TextColumn::make('ip_address')
                     ->label('IP Address')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn ($record) => "https://whatismyipaddress.com/ip/{$record->ip_address}", shouldOpenInNewTab: true)
+                    ->color('primary')
+                    ->icon('heroicon-o-globe-alt'),
                 Tables\Columns\TextColumn::make('user_agent')
                     ->label('User Agent')
                     ->limit(50)
@@ -108,7 +111,11 @@ class SessionResource extends Resource
                                     ->label('Email'),
                                 \Filament\Infolists\Components\TextEntry::make('ip_address')
                                     ->label('IP Address')
-                                    ->copyable(),
+                                    ->copyable()
+                                    ->url(fn ($record) => "https://whatismyipaddress.com/ip/{$record->ip_address}")
+                                    ->openUrlInNewTab()
+                                    ->color('primary')
+                                    ->icon('heroicon-o-globe-alt'),
                                 \Filament\Infolists\Components\TextEntry::make('last_activity')
                                     ->label('Last Activity')
                                     ->dateTime()
@@ -124,19 +131,58 @@ class SessionResource extends Resource
                                     ->copyable(),
                             ]),
 
+                        \Filament\Infolists\Components\Section::make('Request Headers')
+                            ->schema([
+                                \Filament\Infolists\Components\TextEntry::make('request_headers')
+                                    ->label('HTTP Headers')
+                                    ->columnSpanFull()
+                                    ->formatStateUsing(function ($state) {
+                                        if (!$state) {
+                                            return 'No headers stored';
+                                        }
+                                        $headers = json_decode($state, true);
+                                        if (!$headers) {
+                                            return $state;
+                                        }
+                                        $output = '';
+                                        foreach ($headers as $key => $value) {
+                                            if (is_array($value)) {
+                                                $value = implode(', ', $value);
+                                            }
+                                            $output .= "{$key}: {$value}\n";
+                                        }
+                                        return $output;
+                                    })
+                                    ->copyable()
+                                    ->prose(false),
+                            ])
+                            ->collapsible()
+                            ->collapsed(),
+
                         \Filament\Infolists\Components\Section::make('Session Payload')
                             ->schema([
                                 \Filament\Infolists\Components\TextEntry::make('payload')
                                     ->label('Session Data')
                                     ->columnSpanFull()
-                                    ->formatStateUsing(fn ($state) => base64_decode($state))
-                                    ->copyable(),
+                                    ->formatStateUsing(function ($state) {
+                                        $decoded = base64_decode($state);
+                                        // Try to pretty print if it's serialized data
+                                        $unserialized = @unserialize($decoded);
+                                        if ($unserialized !== false) {
+                                            return print_r($unserialized, true);
+                                        }
+                                        return $decoded;
+                                    })
+                                    ->copyable()
+                                    ->prose(false),
                             ])
                             ->collapsible()
                             ->collapsed(),
                     ]),
                 Tables\Actions\DeleteAction::make()
                     ->label('Terminate')
+                    ->iconButton()
+                    ->tooltip('Terminate Session')
                     ->modalHeading('Terminate Session')
                     ->modalDescription('Are you sure you want to terminate this session? The user will be logged out immediately.')
                     ->successNotificationTitle('Session terminated'),

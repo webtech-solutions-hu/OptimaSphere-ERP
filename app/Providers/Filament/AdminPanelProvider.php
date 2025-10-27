@@ -36,6 +36,8 @@ class AdminPanelProvider extends PanelProvider
             ->passwordReset()
             ->emailVerification()
             ->brandName('OptimaSphere ERP')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->colors([
                 'primary' => Color::rgb('rgb(26, 78, 255)'), // Deep Tech Blue #1A4EFF
                 'info' => Color::rgb('rgb(0, 224, 198)'),    // Aqua Cyan #00E0C6
