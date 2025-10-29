@@ -100,6 +100,14 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     }
 
     /**
+     * Check if user can access manufacturing resources.
+     */
+    public function canAccessManufacturing(): bool
+    {
+        return $this->isSupervisor() || $this->hasRole('manufacturing') || $this->hasRole('it');
+    }
+
+    /**
      * Check if user is approved.
      */
     public function isApproved(): bool

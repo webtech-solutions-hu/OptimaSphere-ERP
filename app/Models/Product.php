@@ -288,6 +288,46 @@ class Product extends Model
     }
 
     /**
+     * Get raw material details (if product is a raw material)
+     */
+    public function rawMaterial()
+    {
+        return $this->hasOne(RawMaterial::class);
+    }
+
+    /**
+     * Get component details (if product is a component)
+     */
+    public function component()
+    {
+        return $this->hasOne(Component::class);
+    }
+
+    /**
+     * Get finished good details (if product is a finished good)
+     */
+    public function finishedGood()
+    {
+        return $this->hasOne(FinishedGood::class);
+    }
+
+    /**
+     * Get bill of materials where this product is the output
+     */
+    public function billOfMaterials()
+    {
+        return $this->hasMany(BillOfMaterial::class);
+    }
+
+    /**
+     * Get production orders for this product
+     */
+    public function productionOrders()
+    {
+        return $this->hasMany(ProductionOrder::class);
+    }
+
+    /**
      * Get stock in a specific warehouse
      */
     public function getStockInWarehouse(int $warehouseId): ?ProductWarehouseStock
