@@ -147,3 +147,5 @@ This project uses Reward for Docker-based local development. The `.reward/` dire
 4. Queue jobs are processed by the queue worker when using `composer dev`
 5. Logs are viewable in real-time via Pail when using `composer dev`
 - Counter must have on all sub-menus.
+- Run all artisan commands with docker exec php-fpm-1 don't create anything what available with command line
+- Run all artisan commands with docker exec werp-php-fpm-1 don't create anything what available with command line
