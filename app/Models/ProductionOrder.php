@@ -339,7 +339,7 @@ class ProductionOrder extends Model
         StockMovement::create([
             'warehouse_id' => $this->warehouse_id,
             'product_id' => $this->product_id,
-            'type' => 'inbound',
+            'type' => 'in',
             'quantity' => $this->quantity_produced,
             'unit_cost' => $unitCost,
             'total_cost' => $this->actual_cost,

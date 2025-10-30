@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker exec:*)",
+      "Bash(for file in /home/unreality1/projects/werp/app/Filament/Resources/{BillOfMaterialResource,ProductionOrderResource,ProductionScheduleResource,WorkCenterResource,MaterialRequisitionResource}.php)",
+      "Bash(do)",
+      "Bash(done)"
+    ]
+  },
+  "spinnerTipsEnabled": false
+}
