@@ -58,6 +58,8 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Procurement & Inventory'),
                 NavigationGroup::make()
+                    ->label('Production & Manufacturing'),
+                NavigationGroup::make()
                     ->label('CRM & Sales'),
                 NavigationGroup::make()
                     ->label('User Management'),
